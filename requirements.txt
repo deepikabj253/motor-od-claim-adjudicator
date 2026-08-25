@@ -1,0 +1,12 @@
+python-dotenv
+pydantic
+presidio-analyzer
+presidio-anonymizer
+chromadb
+langchain
+langchain-openai
+langchain-chroma
+fastapi
+uvicorn
+langgraph
+pytest

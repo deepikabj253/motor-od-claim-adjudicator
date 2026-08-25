@@ -1,0 +1,25 @@
+# Environment / secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+.venv/
+
+# Test / cache
+.pytest_cache/
+.mypy_cache/
+
+# ChromaDB
+data/chroma/
+
+# Generated outputs
+outputs/
+
+# IDE
+.vscode/
+.idea/
