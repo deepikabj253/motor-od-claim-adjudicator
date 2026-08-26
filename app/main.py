@@ -1,11 +1,7 @@
 from fastapi import FastAPI
 
-from app.schemas.claim import (
-    MotorClaim,
-    ClaimAdjudicationResponse,
-)
-
 from app.agent.graph import build_claim_graph
+from app.schemas.claim import MotorClaim
 
 
 # =========================================================
@@ -14,17 +10,17 @@ from app.agent.graph import build_claim_graph
 
 app = FastAPI(
     title="Motor OD Claim Adjudicator",
-    description="API for motor insurance claim adjudication",
+    description=(
+        "AI-powered Motor Own Damage Insurance "
+        "Claim Adjudication"
+    ),
     version="1.0.0",
 )
 
 
 # =========================================================
-# Build LangGraph Workflow
+# Build Claim Graph
 # =========================================================
-
-# Build the graph once when the application starts.
-# The same compiled graph is reused for each request.
 
 claim_graph = build_claim_graph()
 
@@ -33,12 +29,25 @@ claim_graph = build_claim_graph()
 # Health Check
 # =========================================================
 
-@app.get("/api/v1/health")
+@app.get("/health")
 def health_check():
 
     return {
         "status": "healthy",
         "service": "Motor OD Claim Adjudicator",
+    }
+
+
+# =========================================================
+# Root
+# =========================================================
+
+@app.get("/")
+def root():
+
+    return {
+        "service": "Motor OD Claim Adjudicator",
+        "status": "running",
     }
 
 
@@ -74,11 +83,36 @@ def adjudicate(
     return {
         "status": "success",
 
+        # -------------------------------------------------
         # LLM adjudication result
-        "adjudication": result["result"],
+        # -------------------------------------------------
 
+        "adjudication": result.get(
+            "result"
+        ),
+
+        # -------------------------------------------------
         # Deterministic IMT calculation
+        # -------------------------------------------------
+
         "assessment": result.get(
             "assessment"
+        ),
+
+        # -------------------------------------------------
+        # Anonymized vehicle memory ID
+        # -------------------------------------------------
+
+        "vehicle_id": result.get(
+            "vehicle_id"
+        ),
+
+        # -------------------------------------------------
+        # Previous claim history retrieved from Mem0
+        # -------------------------------------------------
+
+        "claim_history": result.get(
+            "claim_history",
+            "NONE",
         ),
     }

@@ -34,27 +34,14 @@ st.divider()
 
 
 # =========================================================
-# Claim Scenario
+# Claim Scenarios
 # =========================================================
 
 st.subheader("📋 Claim Scenario")
 
-claim_scenario = st.selectbox(
-    "Select Claim Scenario",
-    [
-        "Front Bumper Accident",
-        "Driving Without Valid Licence",
-        "Damage Reason Unknown",
-        "Mechanical Breakdown",
-    ],
-)
-
-
-# =========================================================
-# Scenario Data
-# =========================================================
 
 scenario_data = {
+
     "Front Bumper Accident": {
         "accident_description": (
             "The vehicle hit a road divider and "
@@ -106,7 +93,15 @@ scenario_data = {
 }
 
 
-selected_scenario = scenario_data[claim_scenario]
+claim_scenario = st.selectbox(
+    "Select Claim Scenario",
+    list(scenario_data.keys()),
+)
+
+
+selected_scenario = scenario_data[
+    claim_scenario
+]
 
 
 # =========================================================
@@ -115,24 +110,28 @@ selected_scenario = scenario_data[claim_scenario]
 
 st.subheader("👤 Customer & Vehicle")
 
+
 customer_name = st.text_input(
     "Customer Name",
     value="Demo Customer",
 )
 
+
 vehicle_number = st.text_input(
     "Vehicle Number",
-    value="TN 01 AB 1234",
+    value="TN01AB1234",
 )
+
 
 dl_number = st.text_input(
     "Driving Licence Number",
-    value="DL-1420110012345",
+    value="DL123456789",
 )
+
 
 vin = st.text_input(
     "VIN",
-    value="MAT12345678901234",
+    value="TESTVIN123",
 )
 
 
@@ -142,42 +141,58 @@ vin = st.text_input(
 
 st.subheader("🚘 Vehicle & Policy Details")
 
+
+vehicle_age_options = [
+    "0 - 6 Months",
+    "6 Months - 1 Year",
+    "1 - 2 Years",
+    "2 - 5 Years",
+    "5 - 10 Years",
+    "Above 10 Years",
+]
+
+
 vehicle_age = st.selectbox(
     "Vehicle Age",
-    [
-        "0 - 6 Months",
-        "6 Months - 1 Year",
-        "1 - 2 Years",
-        "2 - 5 Years",
-        "5 - 10 Years",
-        "Above 10 Years",
-    ],
-    index=3,
+    vehicle_age_options,
 )
+
+
+engine_cc_options = [
+    "Up to 1500cc",
+    "Above 1500cc",
+]
+
 
 engine_cc = st.selectbox(
     "Engine Capacity",
-    [
-        "Up to 1500cc",
-        "Above 1500cc",
-    ],
+    engine_cc_options,
 )
+
+
+policy_type_options = [
+    "Comprehensive Private Car",
+    "Motor Own Damage",
+]
+
 
 policy_type = st.selectbox(
     "Policy Type",
-    [
-        "Comprehensive Private Car",
-        "Motor Own Damage",
-    ],
+    policy_type_options,
 )
+
+
+vehicle_usage_options = [
+    "Private",
+    "Commercial",
+]
+
 
 vehicle_usage = st.selectbox(
     "Vehicle Usage",
-    [
-        "Private",
-        "Commercial",
-    ],
+    vehicle_usage_options,
 )
+
 
 zero_dep = st.selectbox(
     "Zero Depreciation Add-on",
@@ -187,6 +202,7 @@ zero_dep = st.selectbox(
     ],
 )
 
+
 engine_protect = st.selectbox(
     "Engine Protect Add-on",
     [
@@ -194,6 +210,7 @@ engine_protect = st.selectbox(
         "Yes",
     ],
 )
+
 
 consumables_cover = st.selectbox(
     "Consumables Cover",
@@ -204,31 +221,67 @@ consumables_cover = st.selectbox(
 )
 
 
+st.divider()
+
+
 # =========================================================
 # Accident Details
 # =========================================================
 
 st.subheader("💥 Accident Details")
 
-accident_type = selected_scenario["accident_type"]
 
-licence_status = selected_scenario["licence_status"]
+accident_types = [
+    "Collision",
+    "Vehicle Overturning",
+    "Impact with Object",
+    "Fire",
+    "Flood",
+    "Theft",
+    "Other",
+]
 
-st.text_input(
+
+default_accident_type = selected_scenario[
+    "accident_type"
+]
+
+
+accident_type = st.selectbox(
     "Accident Type",
-    value=accident_type,
-    disabled=True,
+    accident_types,
+    index=accident_types.index(
+        default_accident_type
+    ),
 )
 
-st.text_input(
+
+licence_statuses = [
+    "Valid",
+    "Invalid",
+    "Unknown",
+]
+
+
+default_licence_status = selected_scenario[
+    "licence_status"
+]
+
+
+licence_status = st.selectbox(
     "Driving Licence Status",
-    value=licence_status,
-    disabled=True,
+    licence_statuses,
+    index=licence_statuses.index(
+        default_licence_status
+    ),
 )
+
 
 accident_description = st.text_area(
     "Accident Description",
-    value=selected_scenario["accident_description"],
+    value=selected_scenario[
+        "accident_description"
+    ],
     height=120,
 )
 
@@ -239,91 +292,115 @@ accident_description = st.text_area(
 
 st.subheader("🔧 Garage Estimate")
 
+
+part_options = [
+    "Front Bumper",
+    "Rear Bumper",
+    "Left Fender",
+    "Right Fender",
+    "Left Headlamp",
+    "Right Headlamp",
+    "Bonnet",
+    "Door",
+    "Windshield Glass",
+    "Engine Sump",
+    "Other",
+]
+
+
+category_options = [
+    "PLASTIC",
+    "RUBBER",
+    "GLASS",
+    "METAL",
+    "CONSUMABLE",
+    "LABOUR",
+    "PAINTING",
+]
+
+
 part_name = st.selectbox(
     "Damaged Part",
-    [
-        "Front Bumper",
-        "Rear Bumper",
-        "Left Fender",
-        "Right Fender",
-        "Left Headlamp",
-        "Right Headlamp",
-        "Bonnet",
-        "Door",
-        "Windshield Glass",
-        "Engine Sump",
-    ],
+    part_options,
+    index=part_options.index(
+        selected_scenario["part_name"]
+    )
+    if selected_scenario["part_name"]
+    in part_options
+    else 0,
 )
+
 
 category = st.selectbox(
     "Part Category",
-    [
-        "PLASTIC",
-        "RUBBER",
-        "GLASS",
-        "METAL",
-        "CONSUMABLE",
-        "LABOUR",
-        "PAINTING",
-    ],
+    category_options,
+    index=category_options.index(
+        selected_scenario["category"]
+    )
+    if selected_scenario["category"]
+    in category_options
+    else 0,
 )
 
-default_claim_amount = selected_scenario["claim_amount"]
 
-claim_amount = st.number_input(
+claimed_amount = st.number_input(
     "Claim Amount (₹)",
     min_value=0.0,
-    value=default_claim_amount,
+    value=float(
+        selected_scenario["claim_amount"]
+    ),
     step=500.0,
 )
 
 
+garage_estimate = [
+    {
+        "part_name": part_name,
+        "category": category,
+        "claimed_amount": claimed_amount,
+    }
+]
+
+
 # =========================================================
-# Preview
+# Claim Preview
 # =========================================================
 
-with st.expander("🔍 Claim Preview"):
+st.divider()
 
-    st.write("**Scenario:**", claim_scenario)
+st.subheader("🔍 Claim Preview")
+
+
+preview_col1, preview_col2 = st.columns(2)
+
+
+with preview_col1:
 
     st.write(
-        "**Accident Description:**",
-        accident_description,
+        f"**Vehicle:** {vehicle_number}"
     )
 
     st.write(
-        "**Vehicle Age:**",
-        vehicle_age,
+        f"**Accident:** {accident_type}"
     )
 
     st.write(
-        "**Policy Type:**",
-        policy_type,
+        f"**Part:** {part_name}"
+    )
+
+
+with preview_col2:
+
+    st.write(
+        f"**Licence:** {licence_status}"
     )
 
     st.write(
-        "**Zero Dep:**",
-        zero_dep,
+        f"**Category:** {category}"
     )
 
     st.write(
-        "**Engine Protect:**",
-        engine_protect,
-    )
-
-    st.write(
-        "**Damaged Part:**",
-        part_name,
-    )
-
-    st.write(
-        "**Part Category:**",
-        category,
-    )
-
-    st.write(
-        "**Claim Amount:**",
-        f"₹{claim_amount:,.2f}",
+        f"**Claim Amount:** ₹{claimed_amount:,.2f}"
     )
 
 
@@ -341,69 +418,110 @@ if st.button(
 ):
 
     # -----------------------------------------------------
-    # Validation
+    # Validate accident description
     # -----------------------------------------------------
 
     if not accident_description.strip():
 
         st.error(
-            "Please provide an accident description."
+            "Please provide the accident description."
+        )
+
+    elif not vehicle_number.strip():
+
+        st.error(
+            "Please provide the vehicle number."
         )
 
     else:
-
-        # -------------------------------------------------
-        # Garage Estimate
-        # -------------------------------------------------
-
-        garage_estimate = [
-            {
-                "part_name": part_name,
-                "category": category,
-                "claimed_amount": claim_amount,
-            }
-        ]
 
         # -------------------------------------------------
         # Build Claim Payload
         # -------------------------------------------------
 
         claim = {
-            "customer_name": customer_name or None,
-            "vehicle_number": vehicle_number or None,
-            "dl_number": dl_number or None,
-            "vin": vin or None,
 
-            "accident_description": accident_description,
+            # Customer / Vehicle
+            "customer_name": (
+                customer_name
+                or None
+            ),
 
-            "accident_type": accident_type,
+            "vehicle_number": (
+                vehicle_number
+                or None
+            ),
 
-            "licence_status": licence_status,
+            "dl_number": (
+                dl_number
+                or None
+            ),
 
-            "vehicle_age": vehicle_age,
+            "vin": (
+                vin
+                or None
+            ),
 
-            "engine_cc": engine_cc,
+            # Accident
+            "accident_description": (
+                accident_description
+            ),
 
-            "policy_type": policy_type,
+            "accident_type": (
+                accident_type
+            ),
 
-            "vehicle_usage": vehicle_usage,
+            "licence_status": (
+                licence_status
+            ),
 
-            "zero_dep": zero_dep,
+            # Vehicle / Policy
+            "vehicle_age": (
+                vehicle_age
+            ),
 
-            "engine_protect": engine_protect,
+            "engine_cc": (
+                engine_cc
+            ),
 
-            "consumables_cover": consumables_cover,
+            "policy_type": (
+                policy_type
+            ),
 
-            "claim_amount": claim_amount,
+            "vehicle_usage": (
+                vehicle_usage
+            ),
 
-            "garage_estimate": garage_estimate,
+            # Add-ons
+            "zero_dep": (
+                zero_dep
+            ),
+
+            "engine_protect": (
+                engine_protect
+            ),
+
+            "consumables_cover": (
+                consumables_cover
+            ),
+
+            # Claim
+            "claim_amount": (
+                claimed_amount
+            ),
+
+            # Garage Estimate
+            "garage_estimate": (
+                garage_estimate
+            ),
         }
 
-        # -------------------------------------------------
-        # API Request
-        # -------------------------------------------------
 
         try:
+
+            # -------------------------------------------------
+            # Call FastAPI
+            # -------------------------------------------------
 
             with st.spinner(
                 "🔍 Analyzing claim against the policy..."
@@ -415,6 +533,7 @@ if st.button(
                     timeout=120,
                 )
 
+
             # =================================================
             # Successful Response
             # =================================================
@@ -423,11 +542,60 @@ if st.button(
 
                 result = response.json()
 
+
                 st.success(
                     "✅ Claim adjudication completed."
                 )
 
+
                 st.divider()
+
+
+                # =================================================
+                # Mem0 Claim History
+                # =================================================
+
+                st.subheader(
+                    "🧠 Claim History"
+                )
+
+
+                vehicle_id = result.get(
+                    "vehicle_id"
+                )
+
+
+                claim_history = result.get(
+                    "claim_history",
+                    "NONE",
+                )
+
+
+                if vehicle_id:
+
+                    st.caption(
+                        f"Memory ID: {vehicle_id}"
+                    )
+
+
+                if (
+                    claim_history
+                    and claim_history != "NONE"
+                ):
+
+                    st.info(
+                        claim_history
+                    )
+
+                else:
+
+                    st.success(
+                        "No previous claim history found."
+                    )
+
+
+                st.divider()
+
 
                 # =================================================
                 # IMT Assessment
@@ -437,16 +605,23 @@ if st.button(
                     "assessment"
                 )
 
+
                 if assessment:
 
                     st.subheader(
                         "💰 IMT Loss Assessment"
                     )
 
+
                     items = assessment.get(
                         "items",
                         [],
                     )
+
+
+                    # -------------------------------------------------
+                    # Individual Items
+                    # -------------------------------------------------
 
                     for item in items:
 
@@ -455,33 +630,49 @@ if st.button(
                             f"{item.get('part_name', 'Unknown Part')}"
                         )
 
-                        col1, col2, col3 = st.columns(3)
+
+                        col1, col2, col3 = (
+                            st.columns(3)
+                        )
+
 
                         with col1:
 
                             st.metric(
                                 "Claimed",
-                                f"₹{item.get('claimed_amount', 0):,.2f}",
+                                (
+                                    f"₹"
+                                    f"{item.get('claimed_amount', 0):,.2f}"
+                                ),
                             )
+
 
                         with col2:
 
                             st.metric(
                                 "Depreciation",
-                                f"{item.get('depreciation_percentage', 0)}%",
+                                (
+                                    f"{item.get('depreciation_percentage', 0)}%"
+                                ),
                             )
+
 
                         with col3:
 
                             st.metric(
                                 "Approved",
-                                f"₹{item.get('approved_amount', 0):,.2f}",
+                                (
+                                    f"₹"
+                                    f"{item.get('approved_amount', 0):,.2f}"
+                                ),
                             )
 
+
                         st.caption(
-                            "Category: "
+                            f"Category: "
                             f"{item.get('category', 'Unknown')}"
                         )
+
 
                     # -------------------------------------------------
                     # Financial Summary
@@ -492,37 +683,59 @@ if st.button(
                         {},
                     )
 
+
                     st.subheader(
                         "📊 Financial Summary"
                     )
 
-                    col1, col2 = st.columns(2)
+
+                    col1, col2 = (
+                        st.columns(2)
+                    )
+
 
                     with col1:
 
                         st.metric(
                             "Total Claimed",
-                            f"₹{summary.get('total_claimed', 0):,.2f}",
+                            (
+                                f"₹"
+                                f"{summary.get('total_claimed', 0):,.2f}"
+                            ),
                         )
+
 
                         st.metric(
                             "Gross Approved",
-                            f"₹{summary.get('gross_approved', 0):,.2f}",
+                            (
+                                f"₹"
+                                f"{summary.get('gross_approved', 0):,.2f}"
+                            ),
                         )
+
 
                     with col2:
 
                         st.metric(
                             "Deductible",
-                            f"₹{summary.get('compulsory_deductible', 0):,.2f}",
+                            (
+                                f"₹"
+                                f"{summary.get('compulsory_deductible', 0):,.2f}"
+                            ),
                         )
+
 
                         st.metric(
                             "Net Payable",
-                            f"₹{summary.get('net_payable', 0):,.2f}",
+                            (
+                                f"₹"
+                                f"{summary.get('net_payable', 0):,.2f}"
+                            ),
                         )
 
+
                     st.divider()
+
 
                 # =================================================
                 # Adjudication Result
@@ -532,123 +745,168 @@ if st.button(
                     "📊 Adjudication Result"
                 )
 
+
                 adjudication = result.get(
                     "adjudication"
                 )
 
-                if isinstance(
-                    adjudication,
-                    dict,
-                ):
 
-                    decision = adjudication.get(
-                        "decision",
-                        "UNKNOWN",
-                    )
+                # -------------------------------------------------
+                # Handle Pydantic Response
+                # -------------------------------------------------
 
-                    reason = adjudication.get(
-                        "reason",
-                        "Not provided",
-                    )
+                if adjudication is not None:
 
-                    policy_evidence = adjudication.get(
-                        "policy_evidence",
-                        "Not provided",
-                    )
-
-                    missing_information = adjudication.get(
-                        "missing_information",
-                        "NONE",
-                    )
-
-                    # -------------------------------------------------
-                    # Decision
-                    # -------------------------------------------------
-
-                    st.subheader(
-                        "Decision"
-                    )
-
-                    if decision == "APPROVE":
-
-                        st.success(
-                            "✅ APPROVE"
-                        )
-
-                    elif decision == "REJECT":
-
-                        st.error(
-                            "❌ REJECT"
-                        )
-
-                    elif decision == "NEEDS_REVIEW":
-
-                        st.warning(
-                            "⚠️ NEEDS REVIEW"
-                        )
-
-                    else:
-
-                        st.info(
-                            decision
-                        )
-
-                    # -------------------------------------------------
-                    # Reason
-                    # -------------------------------------------------
-
-                    st.subheader(
-                        "Reason"
-                    )
-
-                    st.write(
-                        reason
-                    )
-
-                    # -------------------------------------------------
-                    # Policy Evidence
-                    # -------------------------------------------------
-
-                    st.subheader(
-                        "Policy Evidence"
-                    )
-
-                    st.info(
-                        policy_evidence
-                    )
-
-                    # -------------------------------------------------
-                    # Missing Information
-                    # -------------------------------------------------
-
-                    st.subheader(
-                        "Missing Information"
-                    )
-
-                    if (
-                        missing_information == "NONE"
-                        or not missing_information
+                    if isinstance(
+                        adjudication,
+                        dict,
                     ):
 
-                        st.success(
-                            "No missing information"
+                        decision = adjudication.get(
+                            "decision",
+                            "UNKNOWN",
                         )
+
+
+                        reason = adjudication.get(
+                            "reason",
+                            "Not provided",
+                        )
+
+
+                        policy_evidence = (
+                            adjudication.get(
+                                "policy_evidence",
+                                "Not provided",
+                            )
+                        )
+
+
+                        missing_information = (
+                            adjudication.get(
+                                "missing_information",
+                                "NONE",
+                            )
+                        )
+
+
+                        # -------------------------------------------------
+                        # Decision
+                        # -------------------------------------------------
+
+                        st.subheader(
+                            "Decision"
+                        )
+
+
+                        if decision == "APPROVE":
+
+                            st.success(
+                                "✅ APPROVE"
+                            )
+
+
+                        elif decision == "REJECT":
+
+                            st.error(
+                                "❌ REJECT"
+                            )
+
+
+                        elif (
+                            decision
+                            == "NEEDS_REVIEW"
+                        ):
+
+                            st.warning(
+                                "⚠️ NEEDS REVIEW"
+                            )
+
+
+                        else:
+
+                            st.info(
+                                decision
+                            )
+
+
+                        # -------------------------------------------------
+                        # Reason
+                        # -------------------------------------------------
+
+                        st.subheader(
+                            "Reason"
+                        )
+
+
+                        st.write(
+                            reason
+                        )
+
+
+                        # -------------------------------------------------
+                        # Policy Evidence
+                        # -------------------------------------------------
+
+                        st.subheader(
+                            "Policy Evidence"
+                        )
+
+
+                        st.info(
+                            policy_evidence
+                        )
+
+
+                        # -------------------------------------------------
+                        # Missing Information
+                        # -------------------------------------------------
+
+                        st.subheader(
+                            "Missing Information"
+                        )
+
+
+                        if (
+                            missing_information
+                            == "NONE"
+                            or not missing_information
+                        ):
+
+                            st.success(
+                                "No missing information"
+                            )
+
+                        else:
+
+                            st.warning(
+                                missing_information
+                            )
+
 
                     else:
 
                         st.warning(
-                            missing_information
+                            "Unexpected adjudication response."
                         )
+
+
+                        st.json(
+                            adjudication
+                        )
+
 
                 else:
 
                     st.warning(
-                        "Unexpected adjudication response."
+                        "Adjudication result was not returned."
                     )
+
 
                     st.json(
                         result
                     )
+
 
             # =================================================
             # API Error
@@ -661,17 +919,20 @@ if st.button(
                     f"{response.status_code}"
                 )
 
+
                 try:
 
                     st.json(
                         response.json()
                     )
 
+
                 except Exception:
 
                     st.write(
                         response.text
                     )
+
 
         # =====================================================
         # Connection Error
@@ -683,13 +944,17 @@ if st.button(
                 "❌ Unable to connect to FastAPI."
             )
 
+
             st.info(
-                "Start FastAPI using:"
+                "Please start FastAPI using:"
             )
 
+
             st.code(
-                "uvicorn app.main:app --reload"
+                "uvicorn app.main:app --reload "
+                "--host 0.0.0.0 --port 8000"
             )
+
 
         # =====================================================
         # Timeout
@@ -702,6 +967,7 @@ if st.button(
                 "Please try again."
             )
 
+
         # =====================================================
         # Request Error
         # =====================================================
@@ -712,6 +978,7 @@ if st.button(
                 f"❌ Request failed: {exc}"
             )
 
+
         # =====================================================
         # Unexpected Error
         # =====================================================
@@ -721,3 +988,4 @@ if st.button(
             st.error(
                 f"❌ Unexpected error: {exc}"
             )
+

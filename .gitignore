@@ -23,3 +23,6 @@ outputs/
 # IDE
 .vscode/
 .idea/
+
+# Mem0 local memory database
+data/memory/
