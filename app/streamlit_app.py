@@ -1,7 +1,6 @@
 import requests
 import streamlit as st
 
-
 # =========================================================
 # Configuration
 # =========================================================
@@ -927,7 +926,7 @@ if st.button(
                     )
 
 
-                except Exception:
+                except ValueError:
 
                     st.write(
                         response.text
@@ -983,7 +982,7 @@ if st.button(
         # Unexpected Error
         # =====================================================
 
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
 
             st.error(
                 f"❌ Unexpected error: {exc}"

@@ -1,6 +1,5 @@
-from presidio_analyzer import AnalyzerEngine, PatternRecognizer, Pattern
+from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer
 from presidio_anonymizer import AnonymizerEngine
-
 
 # Create Presidio engines
 analyzer = AnalyzerEngine()

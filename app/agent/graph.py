@@ -2,18 +2,17 @@ import hashlib
 import json
 from typing import TypedDict
 
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 
-from app.agent.preprocessor import preprocess_claim
-from app.rag.retriever import get_retriever
-from app.memory.memory import (
-    search_claim_memory,
-    add_adjudicated_claim_memory,
-)
-from app.agent.prompt import build_adjudication_prompt
 from app.agent.adjudicator import get_llm
+from app.agent.preprocessor import preprocess_claim
+from app.agent.prompt import build_adjudication_prompt
+from app.memory.memory import (
+    add_adjudicated_claim_memory,
+    search_claim_memory,
+)
+from app.rag.retriever import get_retriever
 from app.schemas.claim import ClaimAdjudicationResponse
-
 
 # =========================================================
 # Claim State
@@ -269,7 +268,7 @@ def store_claim_memory_node(
                 decision=decision,
             )
 
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
 
         print(
             f"Warning: Unable to store claim memory: {exc}"

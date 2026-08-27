@@ -1,0 +1,293 @@
+name: Motor OD Claim Adjudicator CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+
+  # ================================================================
+  # 1. CODE QUALITY & LINTING
+  # ================================================================
+
+  lint:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff
+
+      - name: Run Ruff
+        run: |
+          ruff check .
+
+
+  # ================================================================
+  # 2. UNIT TESTS
+  # ================================================================
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint
+
+    env:
+      PYTHONPATH: .
+
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pytest
+        run: |
+          python -m pytest -v
+
+
+  # ================================================================
+  # 3. APPLICATION VALIDATION
+  # ================================================================
+
+  validate:
+    name: Validate Application
+    runs-on: ubuntu-latest
+    needs: test
+
+    env:
+      PYTHONPATH: .
+
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # --------------------------------------------------------------
+      # Python syntax
+      # --------------------------------------------------------------
+
+      - name: Validate Python Syntax
+        run: |
+          python -m compileall -q app
+
+      # --------------------------------------------------------------
+      # Pydantic schema
+      # --------------------------------------------------------------
+
+      - name: Validate Claim Schema
+        run: |
+          python -c "
+          from app.schemas.claim import MotorClaim, GarageEstimateItem
+
+          item = GarageEstimateItem(
+              part_name='Front Bumper',
+              category='PLASTIC',
+              claimed_amount=4500
+          )
+
+          claim = MotorClaim(
+              vehicle_number='TN01AB1234',
+              accident_description='Vehicle hit a road divider.',
+              claim_amount=4500,
+              garage_estimate=[item]
+          )
+
+          assert claim.claim_amount == 4500
+          assert len(claim.garage_estimate) == 1
+
+          print('Claim schema validation successful')
+          "
+
+      # --------------------------------------------------------------
+      # IMT calculator
+      # --------------------------------------------------------------
+
+      - name: Validate IMT Calculator
+        run: |
+          python -c "
+          from app.tools.imt_calculator import (
+              get_depreciation,
+              calculate_approved_amount,
+          )
+
+          depreciation = get_depreciation(
+              vehicle_age='2 - 5 Years',
+              category='METAL',
+              zero_dep='No'
+          )
+
+          assert depreciation == 25.0
+
+          approved = calculate_approved_amount(
+              claimed_amount=10000,
+              depreciation_percentage=25
+          )
+
+          assert approved == 7500.0
+
+          print('IMT calculator validation successful')
+          "
+
+      # --------------------------------------------------------------
+      # LangGraph
+      # --------------------------------------------------------------
+
+      - name: Validate LangGraph
+        run: |
+          python -c "
+          from app.agent.graph import build_claim_graph
+
+          graph = build_claim_graph()
+
+          assert graph is not None
+
+          print('LangGraph validation successful')
+          "
+
+      # --------------------------------------------------------------
+      # FastAPI
+      # --------------------------------------------------------------
+
+      - name: Validate FastAPI Application
+        run: |
+          python -c "
+          from app.main import app
+
+          assert app is not None
+
+          routes = [
+              route.path
+              for route in app.routes
+          ]
+
+          assert '/health' in routes
+          assert '/api/v1/claims/adjudicate' in routes
+
+          print('FastAPI validation successful')
+          "
+
+
+  # ================================================================
+  # 4. DOCKER BUILD & VERIFICATION
+  # ================================================================
+
+  docker-build:
+    name: Build & Verify Docker Image
+    runs-on: ubuntu-latest
+    needs: validate
+
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Verify Dockerfile
+        run: |
+          test -f Dockerfile
+          echo "Dockerfile found successfully."
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: motor-od-claim-adjudicator:latest
+
+      - name: Verify Docker Image
+        run: |
+          docker images
+          docker inspect motor-od-claim-adjudicator:latest
+
+      # --------------------------------------------------------------
+      # Start container
+      # --------------------------------------------------------------
+
+      - name: Start Docker Container
+        run: |
+          docker run -d \
+            --name motor-od-claim-adjudicator \
+            -p 8000:8000 \
+            -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+            motor-od-claim-adjudicator:latest
+
+      # --------------------------------------------------------------
+      # Wait for application
+      # --------------------------------------------------------------
+
+      - name: Wait for Application Startup
+        run: |
+          sleep 10
+
+      # --------------------------------------------------------------
+      # Health check
+      # --------------------------------------------------------------
+
+      - name: Verify Application Health
+        run: |
+          curl --fail http://localhost:8000/health
+
+      # --------------------------------------------------------------
+      # Show logs if something fails
+      # --------------------------------------------------------------
+
+      - name: Show Container Logs
+        if: always()
+        run: |
+          docker logs motor-od-claim-adjudicator || true
+
+      # --------------------------------------------------------------
+      # Stop container
+      # --------------------------------------------------------------
+
+      - name: Stop Docker Container
+        if: always()
+        run: |
+          docker stop motor-od-claim-adjudicator || true
+          docker rm motor-od-claim-adjudicator || true

@@ -1,7 +1,5 @@
-from typing import Optional, List
 
 from pydantic import BaseModel, Field
-
 
 # =========================================================
 # Garage Estimate Item
@@ -32,13 +30,13 @@ class MotorClaim(BaseModel):
     # Customer / Vehicle Information
     # -----------------------------------------------------
 
-    customer_name: Optional[str] = None
+    customer_name: str | None = None
 
-    vehicle_number: Optional[str] = None
+    vehicle_number: str | None = None
 
-    dl_number: Optional[str] = None
+    dl_number: str | None = None
 
-    vin: Optional[str] = None
+    vin: str | None = None
 
     # -----------------------------------------------------
     # Accident Information
@@ -46,43 +44,43 @@ class MotorClaim(BaseModel):
 
     accident_description: str
 
-    accident_type: Optional[str] = None
+    accident_type: str | None = None
 
-    licence_status: Optional[str] = None
+    licence_status: str | None = None
 
     # -----------------------------------------------------
     # Vehicle / Policy Information
     # -----------------------------------------------------
 
-    vehicle_age: Optional[str] = None
+    vehicle_age: str | None = None
 
-    engine_cc: Optional[str] = None
+    engine_cc: str | None = None
 
-    policy_type: Optional[str] = None
+    policy_type: str | None = None
 
-    vehicle_usage: Optional[str] = None
+    vehicle_usage: str | None = None
 
     # -----------------------------------------------------
     # Add-on Covers
     # -----------------------------------------------------
 
-    zero_dep: Optional[str] = "No"
+    zero_dep: str | None = "No"
 
-    engine_protect: Optional[str] = "No"
+    engine_protect: str | None = "No"
 
-    consumables_cover: Optional[str] = "No"
+    consumables_cover: str | None = "No"
 
     # -----------------------------------------------------
     # Claim Amount
     # -----------------------------------------------------
 
-    claim_amount: Optional[float] = None
+    claim_amount: float | None = None
 
     # -----------------------------------------------------
     # Garage Estimate
     # -----------------------------------------------------
 
-    garage_estimate: List[GarageEstimateItem] = Field(
+    garage_estimate: list[GarageEstimateItem] = Field(
         default_factory=list
     )
 

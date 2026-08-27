@@ -20,3 +20,6 @@ pydantic
 langsmith
 
 mem0ai
+
+ruff
+pytest

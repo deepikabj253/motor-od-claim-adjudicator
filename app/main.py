@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from app.agent.graph import build_claim_graph
 from app.schemas.claim import MotorClaim
 
-
 # =========================================================
 # FastAPI Application
 # =========================================================

@@ -6,7 +6,6 @@ from langchain_openai import ChatOpenAI
 from app.agent.prompt import build_adjudication_prompt
 from app.rag.retriever import get_retriever
 
-
 load_dotenv()
 
 

@@ -1,5 +1,3 @@
-from typing import Dict
-
 
 # =========================================================
 # IMT Depreciation Rules
@@ -40,16 +38,16 @@ def get_depreciation(
     # Zero Depreciation
     # -----------------------------------------------------
 
-    if zero_dep == "Yes":
+        # -----------------------------------------------------
+    # Zero Depreciation
+    # -----------------------------------------------------
 
-        # Zero Dep normally removes depreciation on
-        # eligible parts.
-        if category in [
-            "PLASTIC",
-            "RUBBER",
-            "METAL",
-        ]:
-            return 0.0
+    if zero_dep == "Yes" and category in [
+        "PLASTIC",
+        "RUBBER",
+        "METAL",
+    ]:
+        return 0.0
 
 
     # -----------------------------------------------------
@@ -123,7 +121,7 @@ def assess_garage_item(
     claimed_amount: float,
     vehicle_age: str,
     zero_dep: str,
-) -> Dict:
+) -> dict:
 
     category = category.upper()
 
@@ -159,7 +157,7 @@ def assess_garage_item(
 def calculate_claim_summary(
     items: list,
     compulsory_deductible: float,
-) -> Dict:
+) -> dict:
 
     total_claimed = sum(
         item["claimed_amount"]
