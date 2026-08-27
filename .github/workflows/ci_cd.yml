@@ -188,6 +188,10 @@ jobs:
       # Prompt validation
       # -----------------------------------------------------
 
+            # -----------------------------------------------------
+      # Prompt validation
+      # -----------------------------------------------------
+
       - name: Validate adjudication prompt
         run: |
           python -c "
@@ -196,8 +200,7 @@ jobs:
           prompt = build_adjudication_prompt(
               claim_text='Vehicle hit a road divider.',
               policy_context='Accidental damage is covered.',
-              claim_history='NONE',
-              assessment='Claim assessment available.'
+              claim_history='NONE'
           )
 
           assert prompt
