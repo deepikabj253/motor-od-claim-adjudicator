@@ -315,7 +315,7 @@ jobs:
 
       - name: Run Motor OD LangSmith evaluation
         run: |
-          python -m evals.run_evals
+          PYTHONPATH=. python -m evals.run_evals
 
 
   # =========================================================
