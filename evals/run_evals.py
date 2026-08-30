@@ -27,6 +27,9 @@ client = Client()
 # =========================================================
 
 EVALUATION_CASES = [
+    # -----------------------------------------------------
+    # 1. Covered accidental damage
+    # -----------------------------------------------------
     {
         "name": "Covered accidental damage",
         "inputs": {
@@ -53,6 +56,10 @@ EVALUATION_CASES = [
             "decision": "APPROVE",
         },
     },
+
+    # -----------------------------------------------------
+    # 2. Missing licence information
+    # -----------------------------------------------------
     {
         "name": "Missing licence information",
         "inputs": {
@@ -76,6 +83,123 @@ EVALUATION_CASES = [
         },
         "reference": {
             "decision": "APPROVE",
+        },
+    },
+
+    # -----------------------------------------------------
+    # 3. Invalid driving licence
+    # -----------------------------------------------------
+    {
+        "name": "Invalid driving licence",
+        "inputs": {
+            "claim": MotorClaim(
+                customer_name="Test Customer",
+                vehicle_number="TN03EF9012",
+                accident_description=(
+                    "Vehicle hit a road divider and the "
+                    "front bumper was damaged."
+                ),
+                accident_type="Accident",
+                licence_status="Invalid",
+                vehicle_age="3 years",
+                engine_cc="1200",
+                policy_type="Comprehensive",
+                vehicle_usage="Private",
+                zero_dep="No",
+                engine_protect="No",
+                consumables_cover="No",
+                claim_amount=5000,
+            ).model_dump_json(),
+        },
+        "reference": {
+            "decision": "REJECT",
+        },
+    },
+
+    # -----------------------------------------------------
+    # 4. Mechanical breakdown without insured accident
+    # -----------------------------------------------------
+    {
+        "name": "Mechanical breakdown",
+        "inputs": {
+            "claim": MotorClaim(
+                customer_name="Test Customer",
+                vehicle_number="TN04GH3456",
+                accident_description=(
+                    "Engine stopped working due to "
+                    "mechanical breakdown."
+                ),
+                accident_type="Mechanical Breakdown",
+                licence_status="Valid",
+                vehicle_age="4 years",
+                engine_cc="1200",
+                policy_type="Comprehensive",
+                vehicle_usage="Private",
+                zero_dep="No",
+                engine_protect="No",
+                consumables_cover="No",
+                claim_amount=15000,
+            ).model_dump_json(),
+        },
+        "reference": {
+            "decision": "REJECT",
+        },
+    },
+
+    # -----------------------------------------------------
+    # 5. Intentional damage
+    # -----------------------------------------------------
+    {
+        "name": "Intentional damage",
+        "inputs": {
+            "claim": MotorClaim(
+                customer_name="Test Customer",
+                vehicle_number="TN05IJ7890",
+                accident_description=(
+                    "The insured intentionally damaged "
+                    "the vehicle."
+                ),
+                accident_type="Intentional Damage",
+                licence_status="Valid",
+                vehicle_age="3 years",
+                engine_cc="1200",
+                policy_type="Comprehensive",
+                vehicle_usage="Private",
+                zero_dep="No",
+                engine_protect="No",
+                consumables_cover="No",
+                claim_amount=8000,
+            ).model_dump_json(),
+        },
+        "reference": {
+            "decision": "REJECT",
+        },
+    },
+
+    # -----------------------------------------------------
+    # 6. Insufficient information
+    # -----------------------------------------------------
+    {
+        "name": "Insufficient claim information",
+        "inputs": {
+            "claim": MotorClaim(
+                customer_name="Test Customer",
+                vehicle_number="TN06KL1234",
+                accident_description="Vehicle has damage.",
+                accident_type=None,
+                licence_status=None,
+                vehicle_age="3 years",
+                engine_cc="1200",
+                policy_type="Comprehensive",
+                vehicle_usage="Private",
+                zero_dep="No",
+                engine_protect="No",
+                consumables_cover="No",
+                claim_amount=5000,
+            ).model_dump_json(),
+        },
+        "reference": {
+            "decision": "NEEDS_REVIEW",
         },
     },
 ]
@@ -408,12 +532,13 @@ def run_evaluation() -> None:
     print("Motor OD Evaluation Gate")
     print("=" * 60)
 
-    # LangSmith ExperimentResults exposes results
-    # through the returned object. We additionally
-    # execute the deterministic checks locally so that
-    # the CI/CD pipeline has a reliable exit status.
-
     local_results = []
+
+    decision_counts = {
+        "APPROVE": 0,
+        "REJECT": 0,
+        "NEEDS_REVIEW": 0,
+    }
 
     for case in EVALUATION_CASES:
 
@@ -436,6 +561,10 @@ def run_evaluation() -> None:
                 case["reference"]["decision"]
             ).upper()
 
+            decision_counts[actual] = (
+                decision_counts.get(actual, 0) + 1
+            )
+
             passed = actual == expected
 
             local_results.append(
@@ -454,7 +583,7 @@ def run_evaluation() -> None:
                 f"Result: {'PASS' if passed else 'FAIL'}"
             )
 
-        except RuntimeError as exc:
+        except Exception as exc:
 
             print(
                 f"Evaluation error: {exc}"
@@ -465,11 +594,28 @@ def run_evaluation() -> None:
     passed_count = sum(local_results)
     total_count = len(local_results)
 
+    # -----------------------------------------------------
+    # Evaluation Summary
+    # -----------------------------------------------------
+
     print()
     print("=" * 60)
     print("Evaluation Summary")
     print("=" * 60)
 
+    print(
+        f"APPROVE:       {decision_counts['APPROVE']}"
+    )
+
+    print(
+        f"REJECT:        {decision_counts['REJECT']}"
+    )
+
+    print(
+        f"NEEDS_REVIEW:  {decision_counts['NEEDS_REVIEW']}"
+    )
+
+    print()
     print(
         f"Passed: {passed_count}/{total_count}"
     )
