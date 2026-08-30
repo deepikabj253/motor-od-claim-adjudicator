@@ -118,13 +118,15 @@ jobs:
         run: |
           python -m spacy download en_core_web_sm
 
+
       # -----------------------------------------------------
       # Syntax validation
       # -----------------------------------------------------
 
       - name: Python syntax validation
         run: |
-          python -m compileall -q app
+          python -m compileall -q app evals
+
 
       # -----------------------------------------------------
       # Schema validation
@@ -153,6 +155,7 @@ jobs:
 
           print('Schema validation successful')
           "
+
 
       # -----------------------------------------------------
       # IMT calculator validation
@@ -184,11 +187,8 @@ jobs:
           print('IMT calculator validation successful')
           "
 
-      # -----------------------------------------------------
-      # Prompt validation
-      # -----------------------------------------------------
 
-            # -----------------------------------------------------
+      # -----------------------------------------------------
       # Prompt validation
       # -----------------------------------------------------
 
@@ -209,6 +209,7 @@ jobs:
           print('Prompt validation successful')
           "
 
+
       # -----------------------------------------------------
       # LangGraph validation
       # -----------------------------------------------------
@@ -224,6 +225,7 @@ jobs:
 
           print('LangGraph validation successful')
           "
+
 
       # -----------------------------------------------------
       # FastAPI validation
@@ -249,13 +251,81 @@ jobs:
 
 
   # =========================================================
-  # 4. DOCKER BUILD & CONTAINER VERIFICATION
+  # 4. LANGSMITH LLM-AS-A-JUDGE EVALUATION
+  # =========================================================
+
+  langsmith-evaluation:
+    name: LangSmith LLM-as-a-Judge Evaluation
+    runs-on: ubuntu-latest
+    needs: validate
+
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+      LANGCHAIN_TRACING_V2: "true"
+      LANGCHAIN_PROJECT: "motor-od-claim-adjudicator-evals"
+      PYTHONPATH: .
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+
+      - name: Install spaCy model
+        run: |
+          python -m spacy download en_core_web_sm
+
+
+      # -----------------------------------------------------
+      # Verify LangSmith configuration
+      # -----------------------------------------------------
+
+      - name: Verify LangSmith configuration
+        run: |
+          if [ -z "$LANGCHAIN_API_KEY" ]; then
+            echo "LANGCHAIN_API_KEY is not configured."
+            exit 1
+          fi
+
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "OPENAI_API_KEY is not configured."
+            exit 1
+          fi
+
+          echo "LangSmith and OpenAI configuration detected."
+
+
+      # -----------------------------------------------------
+      # Run LangSmith evaluation
+      # -----------------------------------------------------
+
+      - name: Run Motor OD LangSmith evaluation
+        run: |
+          python -m evals.run_evals
+
+
+  # =========================================================
+  # 5. DOCKER BUILD & CONTAINER VERIFICATION
   # =========================================================
 
   docker:
-    name: Build Docker Image
+    name: Build & Smoke Test Docker Container
     runs-on: ubuntu-latest
-    needs: validate
+    needs: langsmith-evaluation
 
     steps:
 
@@ -314,18 +384,54 @@ jobs:
 
 
       # -----------------------------------------------------
-      # Wait for startup
+      # Wait for application startup
       # -----------------------------------------------------
 
       - name: Wait for application startup
         run: |
           echo "Waiting for FastAPI application..."
 
-          sleep 10
+          for i in {1..30}; do
+
+            echo "Startup check $i/30"
+
+            if curl \
+                --silent \
+                --fail \
+                http://localhost:8000/health; then
+
+              echo ""
+              echo "FastAPI application is healthy."
+              exit 0
+
+            fi
+
+            sleep 2
+
+          done
+
+          echo ""
+          echo "FastAPI application failed to become healthy."
+
+          echo ""
+          echo "======================================"
+          echo "DOCKER CONTAINER STATUS"
+          echo "======================================"
+
+          docker ps -a
+
+          echo ""
+          echo "======================================"
+          echo "DOCKER CONTAINER LOGS"
+          echo "======================================"
+
+          docker logs motor-od-claim-adjudicator || true
+
+          exit 1
 
 
       # -----------------------------------------------------
-      # Check container status
+      # Check Docker container
       # -----------------------------------------------------
 
       - name: Check Docker container
@@ -355,29 +461,42 @@ jobs:
           curl \
             --verbose \
             --fail \
-            --retry 5 \
-            --retry-delay 3 \
-            http://localhost:8000/health
+            http://127.0.0.1:8000/health
 
 
       # -----------------------------------------------------
-      # Verify API endpoint exists
+      # Verify root endpoint
       # -----------------------------------------------------
 
-      - name: Verify API endpoint
+      - name: Verify root endpoint
         run: |
-          echo "Checking API endpoint..."
+          echo "Checking FastAPI root endpoint..."
 
           curl \
             --verbose \
-            http://localhost:8000/docs
+            --fail \
+            http://127.0.0.1:8000/
 
 
       # -----------------------------------------------------
-      # Show logs
+      # Verify API documentation
       # -----------------------------------------------------
 
-      - name: Show container logs
+      - name: Verify API documentation
+        run: |
+          echo "Checking FastAPI documentation..."
+
+          curl \
+            --verbose \
+            --fail \
+            http://127.0.0.1:8000/docs
+
+
+      # -----------------------------------------------------
+      # Final container logs
+      # -----------------------------------------------------
+
+      - name: Show final container logs
         if: always()
         run: |
           echo "======================================"
@@ -396,3 +515,4 @@ jobs:
         run: |
           docker stop motor-od-claim-adjudicator || true
           docker rm motor-od-claim-adjudicator || true
+
