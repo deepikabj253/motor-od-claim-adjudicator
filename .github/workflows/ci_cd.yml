@@ -12,7 +12,6 @@ on:
       - master
       - main
 
-
 jobs:
 
   # =========================================================
@@ -24,7 +23,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -60,7 +58,6 @@ jobs:
       PYTHONPATH: .
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -99,7 +96,6 @@ jobs:
       PYTHONPATH: .
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -118,7 +114,6 @@ jobs:
         run: |
           python -m spacy download en_core_web_sm
 
-
       # -----------------------------------------------------
       # Syntax validation
       # -----------------------------------------------------
@@ -126,7 +121,6 @@ jobs:
       - name: Python syntax validation
         run: |
           python -m compileall -q app evals
-
 
       # -----------------------------------------------------
       # Schema validation
@@ -155,7 +149,6 @@ jobs:
 
           print('Schema validation successful')
           "
-
 
       # -----------------------------------------------------
       # IMT calculator validation
@@ -187,7 +180,6 @@ jobs:
           print('IMT calculator validation successful')
           "
 
-
       # -----------------------------------------------------
       # Prompt validation
       # -----------------------------------------------------
@@ -209,7 +201,6 @@ jobs:
           print('Prompt validation successful')
           "
 
-
       # -----------------------------------------------------
       # LangGraph validation
       # -----------------------------------------------------
@@ -225,7 +216,6 @@ jobs:
 
           print('LangGraph validation successful')
           "
-
 
       # -----------------------------------------------------
       # FastAPI validation
@@ -268,7 +258,6 @@ jobs:
       PYTHONPATH: .
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -307,13 +296,15 @@ jobs:
           echo "LangSmith endpoint: $LANGCHAIN_ENDPOINT"
           echo "LangSmith project: $LANGCHAIN_PROJECT"
 
-    # -----------------------------------------------------
-    # Run LangSmith evaluation
-    # -----------------------------------------------------
+      # -----------------------------------------------------
+      # Run LangSmith evaluation
+      # -----------------------------------------------------
 
-    - name: Run Motor OD LangSmith evaluation
-      run: |
-        PYTHONPATH=. python evals/run_evals.py
+      - name: Run Motor OD LangSmith evaluation
+        run: |
+          PYTHONPATH=. python evals/run_evals.py
+
+
   # =========================================================
   # 5. DOCKER BUILD & CONTAINER VERIFICATION
   # =========================================================
@@ -324,14 +315,12 @@ jobs:
     needs: langsmith-evaluation
 
     steps:
-
       # -----------------------------------------------------
       # Checkout
       # -----------------------------------------------------
 
       - name: Checkout repository
         uses: actions/checkout@v4
-
 
       # -----------------------------------------------------
       # Verify Dockerfile
@@ -341,7 +330,6 @@ jobs:
         run: |
           test -f Dockerfile
           echo "Dockerfile found successfully."
-
 
       # -----------------------------------------------------
       # Build Docker image
@@ -353,7 +341,6 @@ jobs:
             -t motor-od-claim-adjudicator:${{ github.sha }} \
             .
 
-
       # -----------------------------------------------------
       # Verify Docker image
       # -----------------------------------------------------
@@ -364,7 +351,6 @@ jobs:
             motor-od-claim-adjudicator:${{ github.sha }}
 
           echo "Docker image built successfully."
-
 
       # -----------------------------------------------------
       # Start Docker container
@@ -378,7 +364,6 @@ jobs:
             -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
             motor-od-claim-adjudicator:${{ github.sha }}
 
-
       # -----------------------------------------------------
       # Wait for application startup
       # -----------------------------------------------------
@@ -388,28 +373,25 @@ jobs:
           echo "Waiting for FastAPI application..."
 
           for i in {1..30}; do
-
             echo "Startup check $i/30"
 
             if curl \
                 --silent \
                 --fail \
-                http://localhost:8000/health; then
+                http://127.0.0.1:8000/health; then
 
               echo ""
               echo "FastAPI application is healthy."
               exit 0
-
             fi
 
             sleep 2
-
           done
 
           echo ""
           echo "FastAPI application failed to become healthy."
-
           echo ""
+
           echo "======================================"
           echo "DOCKER CONTAINER STATUS"
           echo "======================================"
@@ -417,6 +399,7 @@ jobs:
           docker ps -a
 
           echo ""
+
           echo "======================================"
           echo "DOCKER CONTAINER LOGS"
           echo "======================================"
@@ -424,7 +407,6 @@ jobs:
           docker logs motor-od-claim-adjudicator || true
 
           exit 1
-
 
       # -----------------------------------------------------
       # Check Docker container
@@ -439,12 +421,12 @@ jobs:
           docker ps -a
 
           echo ""
+
           echo "======================================"
           echo "DOCKER CONTAINER LOGS"
           echo "======================================"
 
           docker logs motor-od-claim-adjudicator || true
-
 
       # -----------------------------------------------------
       # Verify health endpoint
@@ -459,7 +441,6 @@ jobs:
             --fail \
             http://127.0.0.1:8000/health
 
-
       # -----------------------------------------------------
       # Verify root endpoint
       # -----------------------------------------------------
@@ -472,7 +453,6 @@ jobs:
             --verbose \
             --fail \
             http://127.0.0.1:8000/
-
 
       # -----------------------------------------------------
       # Verify API documentation
@@ -487,7 +467,6 @@ jobs:
             --fail \
             http://127.0.0.1:8000/docs
 
-
       # -----------------------------------------------------
       # Final container logs
       # -----------------------------------------------------
@@ -501,7 +480,6 @@ jobs:
 
           docker logs motor-od-claim-adjudicator || true
 
-
       # -----------------------------------------------------
       # Stop container
       # -----------------------------------------------------
@@ -511,4 +489,3 @@ jobs:
         run: |
           docker stop motor-od-claim-adjudicator || true
           docker rm motor-od-claim-adjudicator || true
-
