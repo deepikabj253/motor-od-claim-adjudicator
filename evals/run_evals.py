@@ -583,7 +583,7 @@ def run_evaluation() -> None:
                 f"Result: {'PASS' if passed else 'FAIL'}"
             )
 
-        except Exception as exc:
+        except RuntimeError as exc:
 
             print(
                 f"Evaluation error: {exc}"
